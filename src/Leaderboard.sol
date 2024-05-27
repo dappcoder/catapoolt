@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "brevis-sdk/apps/framework/BrevisApp.sol";
@@ -11,7 +12,7 @@ import "brevis-sdk/interface/IBrevisProof.sol";
 /// * store the leaderboard of the top N LPs of the previous week (through a Brevis handler function)
 /// * mint soulbound tokens to top N(configurable) LPs (through the brevis handler function)
 /// * soulbound token attributes are (name, symbol, week, rank, pool ID)
-contract Leaderboard is BrevisApp, ERC721Enumerable, ERC721Burnable {
+contract Leaderboard is BrevisApp, ERC721Enumerable, ERC721Burnable, Ownable {
     bytes32 public vkHash;
     uint256 public week;
     uint256 public topN;
@@ -25,11 +26,9 @@ contract Leaderboard is BrevisApp, ERC721Enumerable, ERC721Burnable {
 
     constructor(
         IBrevisProof _brevisProof,
-        bytes32 _vkHash,
         uint256 _week,
         uint256 _topN
-    ) BrevisApp(_brevisProof) ERC721("LeaderboardToken", "LBT") {
-        vkHash = _vkHash;
+    ) BrevisApp(_brevisProof) ERC721("LeaderboardToken", "LBT") Ownable(msg.sender) {
         week = _week;
         topN = _topN;
     }
@@ -63,6 +62,10 @@ contract Leaderboard is BrevisApp, ERC721Enumerable, ERC721Burnable {
         }
 
         return (lpAddresses, ranks, poolIds);
+    }
+
+    function setVkHash(bytes32 _vkHash) external onlyOwner {
+        vkHash = _vkHash;
     }
 
     function _mintSoulboundToken(
