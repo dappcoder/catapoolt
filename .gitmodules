@@ -7,3 +7,9 @@
 [submodule "lib/v4-core"]
 	path = lib/v4-core
 	url = https://github.com/Uniswap/v4-core
+[submodule "lib/brevis-contracts"]
+	path = lib/brevis-contracts
+	url = https://github.com/brevis-network/brevis-contracts
+[submodule "lib/Solidity-RLP"]
+	path = lib/Solidity-RLP
+	url = https://github.com/hamdiallam/Solidity-RLP
