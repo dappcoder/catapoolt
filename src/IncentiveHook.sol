@@ -22,6 +22,7 @@ import {FixedPoint128} from "v4-core/libraries/FixedPoint128.sol";
 import "forge-std/console.sol";
 
 contract IncentiveHook is BaseHook {
+
     using CurrencyLibrary for Currency;
  
     using BalanceDeltaLibrary for BalanceDelta;
@@ -164,6 +165,8 @@ contract IncentiveHook is BaseHook {
 
     mapping(bytes32 => WithdrawalSnapshot) public lastWithdrawals;
 
+    mapping(bytes32 => PokeSnapshot) public lastPokes;
+
     struct Values {
         uint256 amountPerBlock;
         uint256 nrOfBlocks;
@@ -174,6 +177,12 @@ contract IncentiveHook is BaseHook {
         uint256 feeGrowthInside1X128;
         uint256 feesGrowthGlobal0X128;
         uint256 feesGrowthGlobal1X128;
+        uint256 blockNumber;
+    }
+
+    struct PokeSnapshot {
+        uint256 feeGrowthInside0X128;
+        uint256 feeGrowthInside1X128;
         uint256 blockNumber;
     }
 
@@ -321,5 +330,15 @@ contract IncentiveHook is BaseHook {
         require(rewardToken.balanceOf(address(this)) >= totalRewards, "Insufficient contract balance");
 
         rewardToken.transfer(msg.sender, totalRewards);
+    }
+
+    /// Pokes the pool manager to update the fee growth values
+    function poke(PoolKey memory key, PositionParams memory params) external returns (BalanceDelta feesAccrued) {
+        // calls PoolManager.modifyLiquidity with 0 liquidity delta parameter so that the fees for the LP are updated
+        (, feesAccrued) = poolManager.modifyLiquidity(
+            key,
+            IPoolManager.ModifyLiquidityParams(params.tickLower, params.tickUpper, 0 ether, params.salt), 
+            new bytes(0)
+        );
     }
 }
