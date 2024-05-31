@@ -105,4 +105,6 @@ contract Leaderboard is BrevisApp, ERC721Enumerable, ERC721Burnable, Ownable {
         uint256 rank,
         uint256 poolId
     );
+
+    
 }
