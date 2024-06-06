@@ -295,9 +295,10 @@ contract IncentiveHook is BaseHook {
 
     function withdrawRewards(
         PositionParams memory params,
-        ERC20 rewardToken
+        ERC20 rewardToken,
+        address claimer
     ) external returns (uint256 rewards0, uint256 rewards1) {
-        // TODO Ensure the caller is the owner of the position
+        // TODO Ensure the claimer is the owner of the position
         // require(params.owner == msg.sender, "Caller is not the owner");
 
         // Calculate rewards
@@ -329,7 +330,7 @@ contract IncentiveHook is BaseHook {
         uint256 totalRewards = rewards0 + rewards1;
         require(rewardToken.balanceOf(address(this)) >= totalRewards, "Insufficient contract balance");
 
-        rewardToken.transfer(msg.sender, totalRewards);
+        rewardToken.transfer(claimer, totalRewards);
     }
 
     /// Pokes the pool manager to update the fee growth values

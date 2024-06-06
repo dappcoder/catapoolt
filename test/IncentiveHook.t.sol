@@ -321,7 +321,7 @@ contract TestIncentiveHook is Test, Deployers {
         uint256 initialBalance = rewardToken.balanceOf(address(this));
         uint256 hookInitialBalance = rewardToken.balanceOf(address(hook));
 
-        (uint256 rewards0, uint256 rewards1) = hook.withdrawRewards(params, rewardToken);
+        (uint256 rewards0, uint256 rewards1) = hook.withdrawRewards(params, rewardToken, address(this));
 
         uint256 postWithdrawBalance = rewardToken.balanceOf(address(this));
         uint256 hookPostWithdrawBalance = rewardToken.balanceOf(address(hook));
