@@ -43,9 +43,7 @@ contract OGMultiplier is BrevisApp, Ownable {
 
     constructor(
         address _incentiveHook,
-        IBrevisProof _brevisProof,
-        uint256 _week,
-        uint256 _topN
+        IBrevisProof _brevisProof
     ) BrevisApp(_brevisProof) Ownable(msg.sender) {
         incentiveHook = IncentiveHook(_incentiveHook);
     }
