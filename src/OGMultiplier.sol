@@ -12,12 +12,8 @@ import "brevis-sdk/interface/IBrevisProof.sol";
 contract OGMultiplier is BrevisApp, Ownable {
 
     event OfferingCreated(address indexed currency, uint256 amount, PoolId indexed poolId, uint256 multiplier);
-
-    event RewardsWithdrawn(
-        address lp,
-        PoolId poolId,
-        uint256 rewardAmount
-    );
+    event OfferingToppedUp(address indexed currency, uint256 amount, PoolId indexed poolId);
+    event RewardsWithdrawn(address lp, PoolId poolId, uint256 rewardAmount);
 
     struct Offering {
         address currency;
@@ -36,10 +32,9 @@ contract OGMultiplier is BrevisApp, Ownable {
     bytes32 public vkHash;
 
     mapping(address => Offering[]) internal offerings;
-
     mapping(address => uint256) internal offeringLengths;
-
     mapping(address => mapping(PoolId => uint256)) internal ogMultipliers;
+    mapping(address => mapping(PoolId => uint256)) internal rewardBalances;
 
     constructor(
         address _incentiveHook,
@@ -59,7 +54,7 @@ contract OGMultiplier is BrevisApp, Ownable {
         // TODO: Reset all OG multipliers
 
         // Save OG multipliers on the corresponding pools
-        for(uint256 i = 0; i < ogAddresses.length; i++) {
+        for (uint256 i = 0; i < ogAddresses.length; i++) {
             address ogAddress = ogAddresses[i];
             address currency = currencies[i];
             uint256 amount = amounts[i];
@@ -67,7 +62,7 @@ contract OGMultiplier is BrevisApp, Ownable {
                 Offering storage offering = offerings[currency][j];
                 if (amount >= offering.amount) {
                     ogMultipliers[ogAddress][offering.poolId] = offering.multiplier;
-                } 
+                }
             }
         }
     }
@@ -84,13 +79,18 @@ contract OGMultiplier is BrevisApp, Ownable {
         );
         uint256 totalRewards = rewards0 + rewards1;
 
-        // Apply multiplier and transfer additional rewards
-        uint256 additionalRewards = totalRewards * ogMultipliers[msg.sender][params.poolId] / 10000;        
-        rewardToken.transfer(msg.sender, additionalRewards);        
+        // Apply multiplier
+        uint256 additionalRewards = totalRewards * ogMultipliers[msg.sender][params.poolId] / 10000;
+        
+        // Check and update reward balance
+        require(rewardBalances[address(rewardToken)][params.poolId] >= additionalRewards, "Insufficient reward balance");
+        rewardBalances[address(rewardToken)][params.poolId] -= additionalRewards;
+
+        // Transfer additional rewards
+        rewardToken.transfer(msg.sender, additionalRewards);
 
         emit RewardsWithdrawn(msg.sender, params.poolId, additionalRewards);
     }
-
 
     function decodeOutput(
         bytes calldata output
@@ -109,11 +109,18 @@ contract OGMultiplier is BrevisApp, Ownable {
         return (ogAddresses, tokenAddresses, amounts);
     }
 
-
     function createOffering(Offering memory offering) external onlySponsor(offering.poolId) {
         offerings[offering.currency].push(offering);
-        offeringLengths[offering.currency] = offeringLengths[offering.currency] + 1;
+        offeringLengths[offering.currency] += 1;
 
         emit OfferingCreated(offering.currency, offering.amount, offering.poolId, offering.multiplier);
+    }
+
+    function topupRewards(address currency, PoolId poolId, uint256 amount) external onlySponsor(poolId) {
+        ERC20 rewardToken = ERC20(currency);
+        rewardToken.transferFrom(msg.sender, address(this), amount);
+        rewardBalances[currency][poolId] += amount;
+
+        emit OfferingToppedUp(currency, amount, poolId);
     }
 }
