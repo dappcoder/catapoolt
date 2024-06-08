@@ -37,7 +37,7 @@ contract Leaderboard is BrevisApp, ERC721Enumerable, ERC721Burnable, Ownable {
         bytes32 _requestId,
         bytes32 _vkHash,
         bytes calldata _appCircuitOutput
-    ) internal override {
+    ) public override {
         require(vkHash == _vkHash, "invalid vk");
         (address[] memory lpAddresses, uint256[] memory ranks, uint256[] memory poolIds) = decodeOutput(_appCircuitOutput);
 

@@ -22,6 +22,8 @@ import {Hooks} from "v4-core/libraries/Hooks.sol";
 import {TickMath} from "v4-core/libraries/TickMath.sol";
 
 import {IncentiveHook} from "../src/IncentiveHook.sol";
+import {OGMultiplier} from "../src/OGMultiplier.sol";
+import {MockBrevisProof} from "./utils/MockBrevisProof.sol";
 import {HookMiner} from "./utils/HookMiner.sol";
 
 contract Demo is Test, Deployers {
@@ -42,13 +44,15 @@ contract Demo is Test, Deployers {
 
 	Currency rewardCurrency;
 
-    IncentiveHook hook;
-
     PoolManager mngr;
 
     PoolKey poolKey;
 
     PoolId poolId;
+
+    IncentiveHook hook;
+
+    OGMultiplier ogMultiplier;
 
     function setUp() public {
         deployFreshManagerAndRouters();
@@ -98,6 +102,10 @@ contract Demo is Test, Deployers {
             Constants.SQRT_PRICE_1_1,
             ZERO_BYTES
         );
+
+        MockBrevisProof brevisProof = new MockBrevisProof();
+        ogMultiplier = new OGMultiplier(address(hook), brevisProof);
+
     }
 
     function test_demo_liquidityMining() public {
@@ -187,26 +195,82 @@ contract Demo is Test, Deployers {
     function test_demo_BrevisOgMultiplier() public {
 
         // Sponsor adds mining rewards
+        rewardToken.approve(address(hook), type(uint256).max);
+        hook.updateRewards(poolId, rewardToken, 1 ether, 100);
 
         // Sponsor sets up multiplier for the pool
+        ogMultiplier.createOffering(OGMultiplier.Offering({
+            currency: Currency.unwrap(currency0),
+            amount: 100_000 ether,
+            poolId: poolId,
+            multiplier: 5000 // 5000 bps => 50%
+        }));
 
         // Sponsor tops up multiplier rewards
+        rewardToken.approve(address(ogMultiplier), type(uint256).max);
+        ogMultiplier.topupRewards(address(rewardToken), poolId, 50 ether);
 
         // Alice qualifies as an OG liquidity provider (according to Brevis proof)
+        bytes memory data = new bytes(32);
+        assembly {
+            mstore(add(data, 32), 0) // store the 0 value at the memory location
+        }
+        ogMultiplier.handleProofResult(bytes32(0), bytes32(0), data);
 
         // 10 blocks pass
+        vm.roll(10);
 
         // Alice adds liquidity
+        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 10 ether,
+            salt: bytes32(uint256(0))     // Alice's salt
+        }), ZERO_BYTES);
 
         // Bob adds liquidity
+        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 10 ether,
+            salt: bytes32(uint256(1))     // Bob's salt
+        }), ZERO_BYTES);
 
         // Swap to generate fees
+        swapRouter.swap(poolKey, IPoolManager.SwapParams({
+            zeroForOne: true,
+            amountSpecified: -0.1 ether,
+            sqrtPriceLimitX96: TickMath.MIN_SQRT_PRICE + 1
+        }), PoolSwapTest.TestSettings({
+            settleUsingBurn: false,
+            takeClaims: false
+        }), ZERO_BYTES);
 
         // Alice pokes the pool and claims rewards
+        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams(-60, 60, 0 ether, bytes32(uint256(0))), ZERO_BYTES, false, false);
+        (uint256 aliceTotal, uint256 aliceAdditional) = ogMultiplier.withdrawRewards(IncentiveHook.PositionParams({
+            poolId: poolId,
+            owner: address(modifyLiquidityRouter),
+            tickLower: -60,
+            tickUpper: 60,
+            salt: bytes32(uint256(0)) // Alice's salt
+        }), rewardToken);
 
         // Bob pokes the pool and claims rewards
+        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams(-60, 60, 0 ether, bytes32(uint256(1))), ZERO_BYTES, false, false);
+        (uint256 bobTotal, uint256 bobAdditional) = ogMultiplier.withdrawRewards(IncentiveHook.PositionParams({
+            poolId: poolId,
+            owner: address(modifyLiquidityRouter),
+            tickLower: -60,
+            tickUpper: 60,
+            salt: bytes32(uint256(1)) // Bob's salt
+        }), rewardToken);
 
         // Alice has 50% more rewards than Bob beacuse of the multiplier
+        assertEq(aliceTotal, 7.5 ether);
+        assertEq(bobTotal, 5 ether);
+        assertEq(aliceAdditional, 2.5 ether);
+        assertEq(bobAdditional, 0 ether);
     }
 
     function test_demo_LpCompoetitionTopPrizes() public {

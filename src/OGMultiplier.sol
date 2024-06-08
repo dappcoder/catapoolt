@@ -47,7 +47,7 @@ contract OGMultiplier is BrevisApp, Ownable {
         bytes32 _requestId,
         bytes32 _vkHash,
         bytes calldata _appCircuitOutput
-    ) internal override {
+    ) public override {
         require(vkHash == _vkHash, "invalid vk");
         (address[] memory ogAddresses, address[] memory currencies, uint256[] memory amounts) = decodeOutput(_appCircuitOutput);
 
@@ -70,7 +70,7 @@ contract OGMultiplier is BrevisApp, Ownable {
     function withdrawRewards(
         IncentiveHook.PositionParams calldata params,
         ERC20 rewardToken
-    ) external {
+    ) external returns (uint256 totalRewards, uint256 additionalRewards) {
         // Call IncentiveHook to withdraw rewards
         (uint256 rewards0, uint256 rewards1) = incentiveHook.withdrawRewards(
             params,
