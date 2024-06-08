@@ -118,7 +118,7 @@ contract Demo is Test, Deployers {
 
         MockBrevisProof brevisProof = new MockBrevisProof();
         ogMultiplier = new OGMultiplier(address(hook), brevisProof);
-        lpCompetition = new LPCompetition();
+        lpCompetition = new LPCompetition(address(hook), address(modifyLiquidityRouter));
 
         alice = address(0x1);
         bob = address(0x2);
@@ -299,7 +299,7 @@ contract Demo is Test, Deployers {
         prizes[0] = 10 ether;
         prizes[1] = 5 ether;
         prizes[2] = 2.5 ether;
-        uint256 competitionId = lpCompetition.createCompetition(poolId, address(rewardToken), prizes);
+        uint256 competitionId = lpCompetition.createCompetition(poolKey, address(rewardToken), prizes);
 
         // Sponsor deposits prize tokens
         rewardToken.approve(address(lpCompetition), type(uint256).max);
@@ -338,11 +338,36 @@ contract Demo is Test, Deployers {
         }), ZERO_BYTES);
 
         // Alice, Bob, Carol, David and Erica join the competition
-        lpCompetition.registerForCompetition(alice, competitionId);
-        lpCompetition.registerForCompetition(bob, competitionId);
-        lpCompetition.registerForCompetition(carol, competitionId);
-        lpCompetition.registerForCompetition(david, competitionId);
-        lpCompetition.registerForCompetition(erica, competitionId);
+        lpCompetition.registerForCompetition(alice, competitionId, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 0 ether,
+            salt: bytes32(uint256(0))     // Alice's salt
+        }));
+        lpCompetition.registerForCompetition(bob, competitionId, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 0 ether,
+            salt: bytes32(uint256(1))     // Bob's salt
+        }));
+        lpCompetition.registerForCompetition(carol, competitionId, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 0 ether,
+            salt: bytes32(uint256(2))     // Carol's salt
+        }));
+        lpCompetition.registerForCompetition(david, competitionId, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 0 ether,
+            salt: bytes32(uint256(3))     // David's salt
+        }));
+        lpCompetition.registerForCompetition(erica, competitionId, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 0 ether,
+            salt: bytes32(uint256(4))     // Erica's salt
+        }));
 
         // Swap to generate fees
         swapRouter.swap(poolKey, IPoolManager.SwapParams({
@@ -394,26 +419,133 @@ contract Demo is Test, Deployers {
 
     function test_demo_LpCompetitionDynamicFeeDistribution() public {
 
-        // Sponsor creates LP competition (top 3 will earn prizes)
-
         // Alice, Bob, Carol, David and Erica add descending amounts of liquidity
+        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 10 ether,
+            salt: bytes32(uint256(0))     // Alice's salt
+        }), ZERO_BYTES);
+        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 9 ether,
+            salt: bytes32(uint256(1))     // Bob's salt
+        }), ZERO_BYTES);
+        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 8 ether,
+            salt: bytes32(uint256(2))     // Carol's salt
+        }), ZERO_BYTES);
+        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 7 ether,
+            salt: bytes32(uint256(3))     // David's salt
+        }), ZERO_BYTES);
+        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 6 ether,
+            salt: bytes32(uint256(4))     // Erica's salt
+        }), ZERO_BYTES);
+
+        // Sponsor creates LP competition (top 3 will earn prizes)
+        uint256[] memory prizes = new uint256[](3);
+        prizes[0] = 0 ether;
+        prizes[1] = 0 ether;
+        prizes[2] = 0 ether;
+        uint256 competitionId = lpCompetition.createCompetition(poolKey, address(rewardToken), prizes);        
 
         // Alice, Bob, Carol, David and Erica join the competition
+        lpCompetition.registerForCompetition(alice, competitionId, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 0 ether,
+            salt: bytes32(uint256(0))     // Alice's salt
+        }));
+        lpCompetition.registerForCompetition(bob, competitionId, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 0 ether,
+            salt: bytes32(uint256(1))     // Bob's salt
+        }));
+        lpCompetition.registerForCompetition(carol, competitionId, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 0 ether,
+            salt: bytes32(uint256(2))     // Carol's salt
+        }));
+        lpCompetition.registerForCompetition(david, competitionId, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 0 ether,
+            salt: bytes32(uint256(3))     // David's salt
+        }));
+        lpCompetition.registerForCompetition(erica, competitionId, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 0 ether,
+            salt: bytes32(uint256(4))     // Erica's salt
+        }));
+
+        // Registration window closes
+        uint256 secondsInADay = 24 * 60 * 60;
+        uint256 adjustment = 1000;
+        uint256 blockDuration = 12;
+        uint256 blockNumber = (secondsInADay - adjustment) / blockDuration;
+        vm.roll(blockNumber);
 
         // Swap to generate fees
+        swapRouter.swap(poolKey, IPoolManager.SwapParams({
+            zeroForOne: true,
+            amountSpecified: -0.1 ether,
+            sqrtPriceLimitX96: TickMath.MIN_SQRT_PRICE + 1
+        }), PoolSwapTest.TestSettings({
+            settleUsingBurn: false,
+            takeClaims: false
+        }), ZERO_BYTES);
 
         // Almost 1 week later 
+        uint256 secondsInAWeek = 7 * 24 * 60 * 60;
+        adjustment = 100;
+        uint256 divisor = 12;
+        blockNumber = (secondsInAWeek - adjustment) / divisor;
+        vm.roll(blockNumber);
 
         // Alice, Bob, Carol, David and Erica end participation
+        lpCompetition.endParticipation(alice, competitionId);
+        lpCompetition.endParticipation(bob, competitionId);
+        lpCompetition.endParticipation(carol, competitionId);
+        lpCompetition.endParticipation(david, competitionId);
+        lpCompetition.endParticipation(erica, competitionId);
+
+        // TODO embed in first endParticipation call ???
+        lpCompetition.calculateRankings(competitionId);
 
         // 1 week+ later (competition ended)
+        blockNumber = (secondsInAWeek - adjustment) / divisor;
+        vm.roll(blockNumber);
 
         // Alice, Bob, Carol, David and Erica mint SBT rank badges
+        lpCompetition.mintSoulboundToken(alice, competitionId);
+        lpCompetition.mintSoulboundToken(bob, competitionId);
+        lpCompetition.mintSoulboundToken(carol, competitionId);
+        lpCompetition.mintSoulboundToken(david, competitionId);
+        lpCompetition.mintSoulboundToken(erica, competitionId);
 
-        // Swap in week 2 generates fees
+        // Everyone earned 10% less fees
+        // assertEq(aliceEndFees, 0.9 ether); 
+        // assertEq(bobEndFees, 0.9 ether); 
+        // assertEq(carolEndFees, 0.9 ether); 
+        // assertEq(davidEndFees, 0.9 ether); 
+        // assertEq(ericaEndFees, 0.9 ether); 
 
-        // David and Erica earn 10% less fees than paid by swapper.
+        // Alice, Bob and Carol claim retained fees.
+        // TODO
 
-        // Alice, Bob and Carol claim the fees retained from David and Erica.
+        // David and Erica have no fees to claim.
+        // TODO
     }
 }
