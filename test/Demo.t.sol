@@ -104,26 +104,87 @@ contract Demo is Test, Deployers {
         console.log("Liquidity Mining Test");
 
         // Sponsor adds mining rewards
-
-        // 10 blocks pass
+        rewardToken.approve(address(hook), type(uint256).max);
+        hook.updateRewards(poolId, rewardToken, 1 ether, 100);
 
         // Alice adds liquidity
+        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams({
+            tickLower: -120,
+            tickUpper: 120,
+            liquidityDelta: 10 ether,
+            salt: bytes32(uint256(0))     // Alice's salt
+        }), ZERO_BYTES);
 
         // Bob adds liquidity
+        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 5 ether,
+            salt: bytes32(uint256(1))     // Bob's salt
+        }), ZERO_BYTES);
 
         // Carol adds liquidity
+        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 10 ether,
+            salt: bytes32(uint256(2))     // Carol's salt
+        }), ZERO_BYTES);
 
         // Swap to generate fees
+        swapRouter.swap(poolKey, IPoolManager.SwapParams({
+            zeroForOne: true,
+            amountSpecified: -0.1 ether,
+            sqrtPriceLimitX96: TickMath.MIN_SQRT_PRICE + 1
+        }), PoolSwapTest.TestSettings({
+            settleUsingBurn: false,
+            takeClaims: false
+        }), ZERO_BYTES);
+
+        // 10 blocks pass
+        vm.roll(10);
 
         // Alice pokes the pool and claims rewards
+        console.log("<<<<  BEFORE  >>>>");
+        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams(-120, 120, 0 ether, bytes32(uint256(0))), ZERO_BYTES, false, false);
+        (uint256 aliceRewards0, uint256 aliceRewards1) = hook.withdrawRewards(IncentiveHook.PositionParams({
+            poolId: poolId,
+            owner: address(modifyLiquidityRouter),
+            tickLower: -120,
+            tickUpper: 120,
+            salt: bytes32(uint256(0)) // Alice's salt
+        }), rewardToken, address(this));
+        console.log("<<<<  AFTER   >>>>");
 
         // Bob pokes the pool and claims rewards
+        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams(-60, 60, 0 ether, bytes32(uint256(1))), ZERO_BYTES, false, false);
+        (uint256 bobRewards0, uint256 bobRewards1) = hook.withdrawRewards(IncentiveHook.PositionParams({
+            poolId: poolId,
+            owner: address(modifyLiquidityRouter),
+            tickLower: -60,
+            tickUpper: 60,
+            salt: bytes32(uint256(1)) // Bob's salt
+        }), rewardToken, address(this));
 
         // Carol pokes the pool and claims rewards
+        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams(-60, 60, 0 ether, bytes32(uint256(2))), ZERO_BYTES, false, false);
+        (uint256 carolRewards0, uint256 carolRewards1) = hook.withdrawRewards(IncentiveHook.PositionParams({
+            poolId: poolId,
+            owner: address(modifyLiquidityRouter),
+            tickLower: -60,
+            tickUpper: 60,
+            salt: bytes32(uint256(2)) // Carol's salt
+        }), rewardToken, address(this));
 
-        // Alice and Bob have the same amount of rewards 
-        
-        // Carol has twice as much.
+        // Bob and Carol have the same amount of rewards 
+        // console.log("Bob Rewards: %d", bobRewards0);
+        assertEq(bobRewards0, 2.5 ether);
+        // console.log("Carol Rewards: %d", carolRewards0);
+        assertEq(carolRewards0, 2.5 ether);
+
+        // Alice has twice as much.
+        console.log("Alice Rewards: %d", aliceRewards0);
+        assertEq(aliceRewards0, 5 ether);
     }
 
     function test_demo_BrevisOgMultiplier() public {
