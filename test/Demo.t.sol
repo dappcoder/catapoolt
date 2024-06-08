@@ -101,7 +101,6 @@ contract Demo is Test, Deployers {
     }
 
     function test_demo_liquidityMining() public {
-        console.log("Liquidity Mining Test");
 
         // Sponsor adds mining rewards
         rewardToken.approve(address(hook), type(uint256).max);
@@ -145,7 +144,6 @@ contract Demo is Test, Deployers {
         vm.roll(10);
 
         // Alice pokes the pool and claims rewards
-        console.log("<<<<  BEFORE  >>>>");
         modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams(-120, 120, 0 ether, bytes32(uint256(0))), ZERO_BYTES, false, false);
         (uint256 aliceRewards0, uint256 aliceRewards1) = hook.withdrawRewards(IncentiveHook.PositionParams({
             poolId: poolId,
@@ -154,7 +152,6 @@ contract Demo is Test, Deployers {
             tickUpper: 120,
             salt: bytes32(uint256(0)) // Alice's salt
         }), rewardToken, address(this));
-        console.log("<<<<  AFTER   >>>>");
 
         // Bob pokes the pool and claims rewards
         modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams(-60, 60, 0 ether, bytes32(uint256(1))), ZERO_BYTES, false, false);
@@ -183,12 +180,11 @@ contract Demo is Test, Deployers {
         assertEq(carolRewards0, 2.5 ether);
 
         // Alice has twice as much.
-        console.log("Alice Rewards: %d", aliceRewards0);
+        // console.log("Alice Rewards: %d", aliceRewards0);
         assertEq(aliceRewards0, 5 ether);
     }
 
     function test_demo_BrevisOgMultiplier() public {
-        console.log("Brevis Og Multiplier Test");        
 
         // Sponsor adds mining rewards
 
@@ -214,7 +210,6 @@ contract Demo is Test, Deployers {
     }
 
     function test_demo_LpCompoetitionTopPrizes() public {
-        console.log("Lp Competition - Top Prizes Test");
 
         // Sponsor creates LP competition (top 3 will earn prizes)
 
@@ -240,7 +235,6 @@ contract Demo is Test, Deployers {
     }
 
     function test_demo_LpCompetitionDynamicFeeDistribution() public {
-        console.log("Lp Competition - Dynamic Fee Distribution Test");
 
         // Sponsor creates LP competition (top 3 will earn prizes)
 
