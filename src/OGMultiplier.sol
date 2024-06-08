@@ -77,10 +77,10 @@ contract OGMultiplier is BrevisApp, Ownable {
             rewardToken,
             msg.sender
         );
-        uint256 totalRewards = rewards0 + rewards1;
+        totalRewards = rewards0 + rewards1;
 
         // Apply multiplier
-        uint256 additionalRewards = totalRewards * ogMultipliers[msg.sender][params.poolId] / 10000;
+        additionalRewards = totalRewards * ogMultipliers[msg.sender][params.poolId] / 10000;
         
         // Check and update reward balance
         require(rewardBalances[address(rewardToken)][params.poolId] >= additionalRewards, "Insufficient reward balance");

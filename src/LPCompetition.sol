@@ -4,11 +4,12 @@ pragma solidity ^0.8.25;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import {PoolId, PoolIdLibrary} from "v4-core/types/PoolId.sol";
 
 contract LPCompetition is ERC721Enumerable {
 
     struct Competition {
-        uint256 rewardPoolId;
+        PoolId rewardPoolId;
         address rewardToken;
         uint256[] rewardAmounts;
         uint256 totalRewards;
@@ -35,7 +36,7 @@ contract LPCompetition is ERC721Enumerable {
     uint256 public constant WEEK_DURATION = 7 * 24 * 60 * 60;
     uint256 public constant REGISTRATION_DURATION = 24 * 60 * 60;
     
-    event CompetitionCreated(uint256 competitionId, uint256 startTime, uint256 rewardPoolId);
+    event CompetitionCreated(uint256 competitionId, uint256 startTime, PoolId rewardPoolId);
     event RewardsDeposited(uint256 competitionId, uint256 totalRewards);
     event LPRegistered(uint256 competitionId, address lp);
     event LPParticipationEnded(uint256 competitionId, address lp, uint256 feesEarned);
@@ -46,7 +47,7 @@ contract LPCompetition is ERC721Enumerable {
         nextCompetitionId = 1;
     }
 
-    function createCompetition(uint256 rewardPoolId, address rewardToken, uint256[] memory rewardAmounts) external {
+    function createCompetition(PoolId rewardPoolId, address rewardToken, uint256[] memory rewardAmounts) external returns (uint256 competitionId) {
         require(rewardAmounts.length > 0, "Invalid reward amounts");
         require(competitions[nextCompetitionId].startTime == 0, "Competition already exists");
 
@@ -67,6 +68,7 @@ contract LPCompetition is ERC721Enumerable {
         });
 
         emit CompetitionCreated(nextCompetitionId, startTime, rewardPoolId);
+        competitionId = currentCompetitionId;
         nextCompetitionId = nextCompetitionId + 1;
     }
 
@@ -82,10 +84,10 @@ contract LPCompetition is ERC721Enumerable {
         emit RewardsDeposited(competitionId, comp.totalRewards);
     }
 
-    function registerForCompetition(uint256 competitionId) external {
+    function registerForCompetition(address competitor, uint256 competitionId) external {
         Competition storage comp = competitions[competitionId];
         require(block.timestamp >= comp.registrationWindow && block.timestamp < comp.startTime, "Registration closed");
-        require(!lpDetails[competitionId][msg.sender].registered, "Already registered");
+        require(!lpDetails[competitionId][competitor].registered, "Already registered");
 
         // Call the poke function on the hook contract to get start fees (pseudo-code)
         // PoolKey memory key;
@@ -94,8 +96,8 @@ contract LPCompetition is ERC721Enumerable {
 
         uint256 startFees = 0; // Replace with actual poke function call
 
-        lpDetails[competitionId][msg.sender] = LPInfo({
-            lpAddress: msg.sender,
+        lpDetails[competitionId][competitor] = LPInfo({
+            lpAddress: competitor,
             startFees: startFees,
             endFees: 0,
             registered: true,
@@ -104,13 +106,13 @@ contract LPCompetition is ERC721Enumerable {
             rank: 0
         });
 
-        competitionLPs[competitionId].push(lpDetails[competitionId][msg.sender]);
+        competitionLPs[competitionId].push(lpDetails[competitionId][competitor]);
 
-        emit LPRegistered(competitionId, msg.sender);
+        emit LPRegistered(competitionId, competitor);
     }
 
-    function endParticipation(uint256 competitionId) external {
-        LPInfo storage lp = lpDetails[competitionId][msg.sender];
+    function endParticipation(address competitor, uint256 competitionId) external {
+        LPInfo storage lp = lpDetails[competitionId][competitor];
         require(lp.registered, "Not registered");
         require(!lp.ended, "Already ended participation");
         require(block.timestamp < competitions[competitionId].startTime + WEEK_DURATION, "Participation window closed");
@@ -125,7 +127,7 @@ contract LPCompetition is ERC721Enumerable {
         lp.endFees = endFees;
         lp.ended = true;
 
-        emit LPParticipationEnded(competitionId, msg.sender, lp.endFees - lp.startFees);
+        emit LPParticipationEnded(competitionId, competitor, lp.endFees - lp.startFees);
     }
 
     function calculateRankings(uint256 competitionId) external {
@@ -161,22 +163,34 @@ contract LPCompetition is ERC721Enumerable {
         }
     }
 
-    function claimRewards(uint256 competitionId) external {
-        LPInfo storage lp = lpDetails[competitionId][msg.sender];
+    function mintSoulboundToken(address participant, uint256 competitionId) public {
+        // Mint SBT as a badge with rank field set to whatever rank the participant achieved
+        uint256 rank = lpDetails[competitionId][participant].rank;
+
+        //_mint(participant, competitionId, rank);
+    }
+
+    function claimPrizes(address participant, uint256 competitionId) external returns (bool prizeClaimed) {
+        LPInfo storage lp = lpDetails[competitionId][participant];
         require(lp.ended, "Participation not ended");
-        require(!lp.claimed, "Rewards already claimed");
+        require(!lp.claimed, "Prizes already claimed");
 
         Competition storage comp = competitions[competitionId];
-        require(lp.rank > 0 && lp.rank <= comp.rewardAmounts.length, "No rewards available");
+            if (lp.rank > 0 && lp.rank <= comp.rewardAmounts.length) {
 
-        // Mark as claimed
-        lp.claimed = true;
+            // Mark as claimed
+            lp.claimed = true;
 
-        // Transfer the reward
-        IERC20 rewardToken = IERC20(comp.rewardToken);
-        rewardToken.transfer(msg.sender, comp.rewardAmounts[lp.rank - 1]);
+            // Transfer the reward
+            IERC20 rewardToken = IERC20(comp.rewardToken);
+            rewardToken.transfer(participant, comp.rewardAmounts[lp.rank - 1]);
 
-        emit RewardsClaimed(competitionId, msg.sender, comp.rewardAmounts[lp.rank - 1], lp.rank);
+            prizeClaimed = true;
+
+            emit RewardsClaimed(competitionId, participant, comp.rewardAmounts[lp.rank - 1], lp.rank);
+        } else {
+            prizeClaimed = false;
+        }
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize) internal override(ERC721Enumerable) {
