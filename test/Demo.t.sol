@@ -102,17 +102,105 @@ contract Demo is Test, Deployers {
 
     function test_demo_liquidityMining() public {
         console.log("Liquidity Mining Test");
+
+        // Sponsor adds mining rewards
+
+        // 10 blocks pass
+
+        // Alice adds liquidity
+
+        // Bob adds liquidity
+
+        // Carol adds liquidity
+
+        // Swap to generate fees
+
+        // Alice pokes the pool and claims rewards
+
+        // Bob pokes the pool and claims rewards
+
+        // Carol pokes the pool and claims rewards
+
+        // Alice and Bob have the same amount of rewards 
+        
+        // Carol has twice as much.
     }
 
     function test_demo_BrevisOgMultiplier() public {
-        console.log("Brevis Og Multiplier Test");
+        console.log("Brevis Og Multiplier Test");        
+
+        // Sponsor adds mining rewards
+
+        // Sponsor sets up multiplier for the pool
+
+        // Sponsor tops up multiplier rewards
+
+        // Alice qualifies as an OG liquidity provider (according to Brevis proof)
+
+        // 10 blocks pass
+
+        // Alice adds liquidity
+
+        // Bob adds liquidity
+
+        // Swap to generate fees
+
+        // Alice pokes the pool and claims rewards
+
+        // Bob pokes the pool and claims rewards
+
+        // Alice has 50% more rewards than Bob beacuse of the multiplier
     }
 
     function test_demo_LpCompoetitionTopPrizes() public {
         console.log("Lp Competition - Top Prizes Test");
+
+        // Sponsor creates LP competition (top 3 will earn prizes)
+
+        // Sponsor deposits prize tokens
+
+        // Alice, Bob, Carol, David and Erica add descending amounts of liquidity
+
+        // Alice, Bob, Carol, David and Erica join the competition
+
+        // Swap to generate fees
+
+        // Almost 1 week later
+
+        // Alice, Bob, Carol, David and Erica end participation
+
+        // 1 week+ later (competition ended)
+
+        // Alice, Bob, Carol, David and Erica mint SBT rank badges
+
+        // Alice, Bob, Carol claim prizes
+
+        // David and Erica did not make it to the top 3. No prizes for them.
     }
 
     function test_demo_LpCompetitionDynamicFeeDistribution() public {
         console.log("Lp Competition - Dynamic Fee Distribution Test");
+
+        // Sponsor creates LP competition (top 3 will earn prizes)
+
+        // Alice, Bob, Carol, David and Erica add descending amounts of liquidity
+
+        // Alice, Bob, Carol, David and Erica join the competition
+
+        // Swap to generate fees
+
+        // Almost 1 week later 
+
+        // Alice, Bob, Carol, David and Erica end participation
+
+        // 1 week+ later (competition ended)
+
+        // Alice, Bob, Carol, David and Erica mint SBT rank badges
+
+        // Swap in week 2 generates fees
+
+        // David and Erica earn 10% less fees than paid by swapper.
+
+        // Alice, Bob and Carol claim the fees retained from David and Erica.
     }
 }
