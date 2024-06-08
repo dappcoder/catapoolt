@@ -14,6 +14,7 @@ import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
 import {IHooks} from "v4-core/interfaces/IHooks.sol";
 import {PoolKey} from "v4-core/types/PoolKey.sol";
 import {PoolId, PoolIdLibrary} from "v4-core/types/PoolId.sol";
+import {BalanceDelta, BalanceDeltaLibrary} from "v4-core/types/BalanceDelta.sol";
 
 import {Currency, CurrencyLibrary} from "v4-core/types/Currency.sol";
 
@@ -70,18 +71,31 @@ contract TestIncentiveHook is Test, Deployers {
 		rewardCurrency = Currency.wrap(address(rewardToken));
 		rewardToken.mint(address(this), 50_000_000 ether);
 
-        uint160 flags = uint160(
-            Hooks.AFTER_ADD_LIQUIDITY_FLAG | Hooks.AFTER_SWAP_FLAG
-        );
-        (, bytes32 salt) = HookMiner.find(
-            address(this),
-            flags,
-            0,
-            type(IncentiveHook).creationCode,
-            abi.encode(manager)
+        // uint160 flags = uint160(
+        //     Hooks.AFTER_ADD_LIQUIDITY_RETURNS_DELTA_FLAG | Hooks.AFTER_REMOVE_LIQUIDITY_RETURNS_DELTA_FLAG
+        // );
+        // (, bytes32 salt) = HookMiner.find(
+        //     address(this),
+        //     flags,
+        //     type(IncentiveHook).creationCode,
+        //     abi.encode(manager)
+        // );
+        // console.log("FOUND SALT!");
+
+        // hook = new IncentiveHook{salt: salt}(manager);
+
+        address hookAddress = address(
+            uint160(
+                Hooks.AFTER_ADD_LIQUIDITY_FLAG |
+                Hooks.AFTER_REMOVE_LIQUIDITY_FLAG |
+                Hooks.AFTER_ADD_LIQUIDITY_RETURNS_DELTA_FLAG | 
+                Hooks.AFTER_REMOVE_LIQUIDITY_RETURNS_DELTA_FLAG
+            )
         );
 
-        hook = new IncentiveHook{salt: salt}(manager);
+        deployCodeTo("IncentiveHook.sol", abi.encode(manager), hookAddress);
+
+        hook = IncentiveHook(hookAddress);
 
         token0.approve(address(swapRouter), type(uint256).max);
         token0.approve(address(modifyLiquidityRouter), type(uint256).max);
@@ -328,5 +342,43 @@ contract TestIncentiveHook is Test, Deployers {
 
         assertEq(rewards0 + rewards1, postWithdrawBalance - initialBalance);
         assertEq(rewards0 + rewards1, hookInitialBalance - hookPostWithdrawBalance);
+    }
+
+
+
+
+    //////////////////////////////////////////
+    //// TESTS fot Dynamic Fee Allocation ////
+    //////////////////////////////////////////
+
+
+    function test_retain_10_percent_of_fees() public {
+        // Add liquidity
+        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams({
+            tickLower: -60,
+            tickUpper: 60,
+            liquidityDelta: 1 ether,
+            salt: 0
+        }), ZERO_BYTES);
+
+        // Swap to generate fees
+        swapRouter.swap(poolKey, IPoolManager.SwapParams({
+            zeroForOne: true,
+            amountSpecified: -0.1 ether,
+            sqrtPriceLimitX96: TickMath.MIN_SQRT_PRICE + 1
+        }), PoolSwapTest.TestSettings({
+            settleUsingBurn: false,
+            takeClaims: false
+        }), ZERO_BYTES);
+
+        // Poke the pool to calculate fees accrued by user
+        BalanceDelta delta = modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams(-60, 60, 0 ether, 0), ZERO_BYTES, false, false);
+
+        // Should only have 90% of fees
+        console.log("Balance Delta amount0 and amount1");
+        int128 amount0 = BalanceDeltaLibrary.amount0(delta);
+        console.logInt(int256(amount0));
+        int128 amount1 = BalanceDeltaLibrary.amount1(delta);
+        console.logInt(int256(amount1));
     }
 }

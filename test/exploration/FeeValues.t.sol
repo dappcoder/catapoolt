@@ -108,7 +108,6 @@ contract FeeValues is Test, Deployers {
         (, bytes32 salt) = HookMiner.find(
             address(this),
             flags,
-            0,
             type(IncentiveHook).creationCode,
             abi.encode(manager)
         );

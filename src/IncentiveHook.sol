@@ -6,7 +6,7 @@ import {BaseHook} from "v4-periphery/BaseHook.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
 
 import {CurrencyLibrary, Currency} from "v4-core/types/Currency.sol";
-import {BalanceDeltaLibrary, BalanceDelta} from "v4-core/types/BalanceDelta.sol";
+import {BalanceDeltaLibrary, BalanceDelta, toBalanceDelta} from "v4-core/types/BalanceDelta.sol";
 
 import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
 
@@ -44,15 +44,15 @@ contract IncentiveHook is BaseHook {
                 beforeAddLiquidity: false,
                 beforeRemoveLiquidity: false,
                 afterAddLiquidity: true,
-                afterRemoveLiquidity: false,
+                afterRemoveLiquidity: true,
                 beforeSwap: false,
-                afterSwap: true,
+                afterSwap: false,
                 beforeDonate: false,
                 afterDonate: false,
                 beforeSwapReturnDelta: false,
                 afterSwapReturnDelta: false,
-                afterAddLiquidityReturnDelta: false,
-                afterRemoveLiquidityReturnDelta: false
+                afterAddLiquidityReturnDelta: true,
+                afterRemoveLiquidityReturnDelta: true
             });
     }
 
@@ -102,7 +102,10 @@ contract IncentiveHook is BaseHook {
         bytes calldata
     ) external override returns (bytes4, BalanceDelta) {
         userPools[msg.sender].push(poolKey.toId());
-        return (this.afterAddLiquidity.selector, delta);
+        console.log("INCENTIVE: afterAddLiquidity");
+        BalanceDelta hookDelta = toBalanceDelta(10_000, 0);
+
+        return (this.afterAddLiquidity.selector, hookDelta);
     }
 
     function afterRemoveLiquidity(
@@ -111,8 +114,13 @@ contract IncentiveHook is BaseHook {
         IPoolManager.ModifyLiquidityParams calldata,
         BalanceDelta delta,
         bytes calldata
-    ) external pure override returns (bytes4, BalanceDelta) {
-        return (this.afterRemoveLiquidity.selector, delta);
+    ) external override returns (bytes4, BalanceDelta) {
+        console.log("INCENTIVE: afterRemoveLiquidity");
+        BalanceDelta hookDelta = toBalanceDelta(10_000, 0); 
+
+        
+
+        return (this.afterRemoveLiquidity.selector, hookDelta);
     }
 
     function beforeSwap(
