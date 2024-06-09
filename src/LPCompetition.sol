@@ -195,7 +195,7 @@ contract LPCompetition is ERC721Enumerable {
         //_mint(participant, competitionId, rank);
     }
 
-    function claimPrizes(address participant, uint256 competitionId) external returns (bool prizeClaimed) {
+    function claimPrize(address participant, uint256 competitionId) external returns (uint256 prizeAmount) {
         LPInfo storage lp = lpDetails[competitionId][participant];
         require(lp.ended, "Participation not ended");
         require(!lp.claimed, "Prizes already claimed");
@@ -210,11 +210,11 @@ contract LPCompetition is ERC721Enumerable {
             IERC20 prizeToken = IERC20(comp.prizeToken);
             prizeToken.transfer(participant, comp.prizeAmounts[lp.rank - 1]);
 
-            prizeClaimed = true;
+            prizeAmount = comp.prizeAmounts[lp.rank - 1];
 
             emit RewardsClaimed(competitionId, participant, comp.prizeAmounts[lp.rank - 1], lp.rank);
         } else {
-            prizeClaimed = false;
+            prizeAmount = 0;
         }
     }
 

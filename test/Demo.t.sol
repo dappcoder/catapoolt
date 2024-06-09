@@ -207,13 +207,10 @@ contract Demo is Test, Deployers {
         }), rewardToken, address(this));
 
         // Bob and Carol have the same amount of rewards 
-        // console.log("Bob Rewards: %d", bobRewards0);
         assertEq(bobRewards0, 2.5 ether);
-        // console.log("Carol Rewards: %d", carolRewards0);
         assertEq(carolRewards0, 2.5 ether);
 
         // Alice has twice as much.
-        // console.log("Alice Rewards: %d", aliceRewards0);
         assertEq(aliceRewards0, 5 ether);
     }
 
@@ -426,13 +423,13 @@ contract Demo is Test, Deployers {
         lpCompetition.mintSoulboundToken(erica, competitionId);
 
         // Alice, Bob, Carol claim prizes
-        assertTrue(lpCompetition.claimPrizes(alice, competitionId));
-        assertTrue(lpCompetition.claimPrizes(bob, competitionId));
-        assertTrue(lpCompetition.claimPrizes(carol, competitionId));
+        assertEq(lpCompetition.claimPrize(alice, competitionId), 10 ether);
+        assertEq(lpCompetition.claimPrize(bob, competitionId), 5 ether);
+        assertEq(lpCompetition.claimPrize(carol, competitionId), 2.5 ether);
 
         // David and Erica did not make it to the top 3. No prizes for them.
-        assertFalse(lpCompetition.claimPrizes(david, competitionId));
-        assertFalse(lpCompetition.claimPrizes(erica, competitionId));
+        assertEq(lpCompetition.claimPrize(david, competitionId), 0 ether);
+        assertEq(lpCompetition.claimPrize(erica, competitionId), 0 ether);
     }
 
 
@@ -524,7 +521,7 @@ contract Demo is Test, Deployers {
         // Swap to generate fees
         swapRouter.swap(poolKey, IPoolManager.SwapParams({
             zeroForOne: true,
-            amountSpecified: -0.1 ether,
+            amountSpecified: -1 ether,
             sqrtPriceLimitX96: TickMath.MIN_SQRT_PRICE + 1
         }), PoolSwapTest.TestSettings({
             settleUsingBurn: false,
@@ -566,11 +563,11 @@ contract Demo is Test, Deployers {
         uint256 davidFees = lpCompetition.getLPInfo(competitionId, david).endFees;
         uint256 ericaFees = lpCompetition.getLPInfo(competitionId, erica).endFees;
 
-        assertEq(aliceFees, 0.009 ether);
-        assertEq(bobFees, 0.009 ether);
-        assertEq(carolFees, 0.009 ether);
-        assertEq(davidFees, 0.009 ether);
-        assertEq(ericaFees, 0.009 ether);
+        assertEq(aliceFees, 0.0054 ether);
+        assertEq(bobFees, 0.0054 ether);
+        assertEq(carolFees, 0.0054 ether);
+        assertEq(davidFees, 0.0054 ether);
+        assertEq(ericaFees, 0.0054 ether);
 
         // Alice, Bob and Carol claim retained fees.
         uint256 aliceExtra = lpCompetition.claimExtraFees(alice, competitionId);
