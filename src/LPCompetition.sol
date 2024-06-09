@@ -218,6 +218,20 @@ contract LPCompetition is ERC721Enumerable {
         }
     }
 
+    function getLPInfo(uint256 competitionId, address participant) external view returns (LPInfo memory) {
+        return lpDetails[competitionId][participant];
+    }
+
+    function claimExtraFees(address participant, uint256 competitionId) external returns (uint256 retainedFees) {
+        LPInfo storage lp = lpDetails[competitionId][participant];
+        require(lp.ended, "Participation not ended");
+        require(lp.claimed, "Prizes not claimed");
+
+        // Transfer the retained fees
+        // IERC20 prizeToken = IERC20(comp.prizeToken);
+        // prizeToken.transfer(participant, lp.endFees - lp.startFees);
+    }
+
     function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize) internal override(ERC721Enumerable) {
         super._beforeTokenTransfer(from, to, tokenId, batchSize);
     }

@@ -127,6 +127,12 @@ contract Demo is Test, Deployers {
         erica = address(0x5);
     }
 
+
+
+    ////////////////////////
+    /// LIQUIDITY MINING ///
+    ////////////////////////
+
     function test_demo_liquidityMining() public {
 
         // Sponsor adds mining rewards
@@ -211,6 +217,12 @@ contract Demo is Test, Deployers {
         assertEq(aliceRewards0, 5 ether);
     }
 
+
+    
+    ////////////////////////////
+    /// BREVIS OG MULTIPLIER ///
+    ////////////////////////////
+
     function test_demo_BrevisOgMultiplier() public {
 
         // Sponsor adds mining rewards
@@ -291,6 +303,12 @@ contract Demo is Test, Deployers {
         assertEq(aliceAdditional, 2.5 ether);
         assertEq(bobAdditional, 0 ether);
     }
+
+
+
+    ///////////////////////////////////
+    /// LP COMPETITION - TOP PRIZES ///
+    ///////////////////////////////////
 
     function test_demo_LpCompoetitionTopPrizes() public {
 
@@ -417,6 +435,12 @@ contract Demo is Test, Deployers {
         assertFalse(lpCompetition.claimPrizes(erica, competitionId));
     }
 
+
+
+    /////////////////////////////////////////////////
+    /// LP COMPETITION - DYNAMIC FEE DISTRIBUTION ///
+    /////////////////////////////////////////////////
+
     function test_demo_LpCompetitionDynamicFeeDistribution() public {
 
         // Alice, Bob, Carol, David and Erica add descending amounts of liquidity
@@ -536,16 +560,30 @@ contract Demo is Test, Deployers {
         lpCompetition.mintSoulboundToken(erica, competitionId);
 
         // Everyone earned 10% less fees
-        // assertEq(aliceEndFees, 0.9 ether); 
-        // assertEq(bobEndFees, 0.9 ether); 
-        // assertEq(carolEndFees, 0.9 ether); 
-        // assertEq(davidEndFees, 0.9 ether); 
-        // assertEq(ericaEndFees, 0.9 ether); 
+        uint256 aliceFees = lpCompetition.getLPInfo(competitionId, alice).endFees;
+        uint256 bobFees = lpCompetition.getLPInfo(competitionId, bob).endFees;
+        uint256 carolFees = lpCompetition.getLPInfo(competitionId, carol).endFees;
+        uint256 davidFees = lpCompetition.getLPInfo(competitionId, david).endFees;
+        uint256 ericaFees = lpCompetition.getLPInfo(competitionId, erica).endFees;
+
+        assertEq(aliceFees, 0.009 ether);
+        assertEq(bobFees, 0.009 ether);
+        assertEq(carolFees, 0.009 ether);
+        assertEq(davidFees, 0.009 ether);
+        assertEq(ericaFees, 0.009 ether);
 
         // Alice, Bob and Carol claim retained fees.
-        // TODO
+        uint256 aliceExtra = lpCompetition.claimExtraFees(alice, competitionId);
+        uint256 bobExtra = lpCompetition.claimExtraFees(bob, competitionId);
+        uint256 carolExtra = lpCompetition.claimExtraFees(carol, competitionId);
+        assertEq(aliceExtra, 0.001 ether);
+        assertEq(bobExtra, 0.001 ether);
+        assertEq(carolExtra, 0.001 ether);
 
         // David and Erica have no fees to claim.
-        // TODO
+        uint256 davidExtra = lpCompetition.claimExtraFees(david, competitionId);
+        uint256 ericaExtra = lpCompetition.claimExtraFees(erica, competitionId);
+        assertEq(davidExtra, 0);
+        assertEq(ericaExtra, 0);
     }
 }
