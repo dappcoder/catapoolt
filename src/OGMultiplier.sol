@@ -3,11 +3,14 @@ pragma solidity ^0.8.25;
 
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {IncentiveHook} from "./IncentiveHook.sol";
+import {SaltLibrary} from "./SaltLibrary.sol";
 import {PoolId} from "v4-core/types/PoolId.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "brevis-sdk/apps/framework/BrevisApp.sol";
 import "brevis-sdk/interface/IBrevisProof.sol";
+
+import "forge-std/console.sol";
 
 contract OGMultiplier is BrevisApp, Ownable {
 
@@ -71,25 +74,27 @@ contract OGMultiplier is BrevisApp, Ownable {
         IncentiveHook.PositionParams calldata params,
         ERC20 rewardToken
     ) external returns (uint256 totalRewards, uint256 additionalRewards) {
+        (address sender, ) = SaltLibrary.fromSalt(params.salt);
+
         // Call IncentiveHook to withdraw rewards
         (uint256 rewards0, uint256 rewards1) = incentiveHook.withdrawRewards(
             params,
             rewardToken,
-            msg.sender
+            sender
         );
         totalRewards = rewards0 + rewards1;
 
         // Apply multiplier
-        additionalRewards = totalRewards * ogMultipliers[msg.sender][params.poolId] / 10000;
+        additionalRewards = totalRewards * ogMultipliers[sender][params.poolId] / 10000;
         
         // Check and update reward balance
         require(rewardBalances[address(rewardToken)][params.poolId] >= additionalRewards, "Insufficient reward balance");
         rewardBalances[address(rewardToken)][params.poolId] -= additionalRewards;
 
         // Transfer additional rewards
-        rewardToken.transfer(msg.sender, additionalRewards);
+        rewardToken.transfer(sender, additionalRewards);
 
-        emit RewardsWithdrawn(msg.sender, params.poolId, additionalRewards);
+        emit RewardsWithdrawn(sender, params.poolId, additionalRewards);
     }
 
     function decodeOutput(

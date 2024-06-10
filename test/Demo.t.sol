@@ -24,6 +24,7 @@ import {TickMath} from "v4-core/libraries/TickMath.sol";
 import {IncentiveHook} from "../src/IncentiveHook.sol";
 import {OGMultiplier} from "../src/OGMultiplier.sol";
 import {LPCompetition} from "../src/LPCompetition.sol";
+import {SaltLibrary} from "../src/SaltLibrary.sol";
 import {MockBrevisProof} from "./utils/MockBrevisProof.sol";
 import {HookMiner} from "./utils/HookMiner.sol";
 
@@ -255,7 +256,7 @@ contract Demo is Test, Deployers {
             tickLower: -60,
             tickUpper: 60,
             liquidityDelta: 10 ether,
-            salt: bytes32(uint256(0))     // Alice's salt
+            salt: SaltLibrary.toSalt(alice, 0)     // Alice's salt
         }), ZERO_BYTES);
 
         // Bob adds liquidity
@@ -263,7 +264,7 @@ contract Demo is Test, Deployers {
             tickLower: -60,
             tickUpper: 60,
             liquidityDelta: 10 ether,
-            salt: bytes32(uint256(1))     // Bob's salt
+            salt: SaltLibrary.toSalt(bob, 0)     // Bob's salt
         }), ZERO_BYTES);
 
         // Swap to generate fees
@@ -277,23 +278,23 @@ contract Demo is Test, Deployers {
         }), ZERO_BYTES);
 
         // Alice pokes the pool and claims rewards
-        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams(-60, 60, 0 ether, bytes32(uint256(0))), ZERO_BYTES, false, false);
+        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams(-60, 60, 0 ether, SaltLibrary.toSalt(alice, 0)), ZERO_BYTES, false, false);
         (uint256 aliceTotal, uint256 aliceAdditional) = ogMultiplier.withdrawRewards(IncentiveHook.PositionParams({
             poolId: poolId,
             owner: address(modifyLiquidityRouter),
             tickLower: -60,
             tickUpper: 60,
-            salt: bytes32(uint256(0)) // Alice's salt
+            salt: SaltLibrary.toSalt(alice, 0)     // Alice's salt
         }), rewardToken);
 
         // Bob pokes the pool and claims rewards
-        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams(-60, 60, 0 ether, bytes32(uint256(1))), ZERO_BYTES, false, false);
+        modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams(-60, 60, 0 ether, SaltLibrary.toSalt(bob, 0)), ZERO_BYTES, false, false);
         (uint256 bobTotal, uint256 bobAdditional) = ogMultiplier.withdrawRewards(IncentiveHook.PositionParams({
             poolId: poolId,
             owner: address(modifyLiquidityRouter),
             tickLower: -60,
             tickUpper: 60,
-            salt: bytes32(uint256(1)) // Bob's salt
+            salt: SaltLibrary.toSalt(bob, 0)     // Bob's salt
         }), rewardToken);
 
         // Alice has 50% more rewards than Bob beacuse of the multiplier
