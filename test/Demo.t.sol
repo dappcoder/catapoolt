@@ -239,10 +239,12 @@ contract Demo is Test, Deployers {
         ogMultiplier.topupRewards(address(rewardToken), poolId, 50 ether);
 
         // Alice qualifies as an OG liquidity provider (according to Brevis proof)
-        bytes memory data = new bytes(32);
-        assembly {
-            mstore(add(data, 32), 0) // store the 0 value at the memory location
-        }
+        uint256 aliceHistoricalFees = 101_000 ether;
+        bytes memory data = abi.encodePacked(
+            bytes20(alice), 
+            bytes20(Currency.unwrap(currency0)), 
+            bytes32(aliceHistoricalFees)
+        );
         ogMultiplier.handleProofResult(bytes32(0), bytes32(0), data);
 
         // 10 blocks pass
