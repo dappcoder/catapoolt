@@ -56,6 +56,10 @@ contract Demo is Test, Deployers {
 
     OGMultiplier ogMultiplier;
 
+    MockBrevisProof mockBrevisProof;
+
+    bytes32 vkHash;
+
     LPCompetition lpCompetition;
 
     address alice;
@@ -117,10 +121,16 @@ contract Demo is Test, Deployers {
             ZERO_BYTES
         );
 
-        MockBrevisProof brevisProof = new MockBrevisProof();
-        ogMultiplier = new OGMultiplier(address(hook), brevisProof);
+        // Brevis OG Multiplier 
+        mockBrevisProof = new MockBrevisProof();
+        ogMultiplier = new OGMultiplier(address(hook), mockBrevisProof);
+        vkHash = bytes32(0x8888888888888888888888888888888888888888888888888888888888888888);
+        ogMultiplier.setVkHash(vkHash);
+
+        // LP Competition
         lpCompetition = new LPCompetition(address(hook), address(modifyLiquidityRouter));
 
+        // Liquidity providers
         alice = address(0x1);
         bob = address(0x2);
         carol = address(0x3);
@@ -241,12 +251,17 @@ contract Demo is Test, Deployers {
 
         // Alice qualifies as an OG liquidity provider (according to Brevis proof)
         uint256 aliceHistoricalFees = 101_000 ether;
-        bytes memory data = abi.encodePacked(
+        bytes memory circuitOutput = abi.encodePacked(
             bytes20(alice), 
             bytes20(Currency.unwrap(currency0)), 
             bytes32(aliceHistoricalFees)
         );
-        ogMultiplier.handleProofResult(bytes32(0), bytes32(0), data);
+        bytes32 outputCommit = keccak256(circuitOutput);
+
+        bytes32 requestId = bytes32(uint256(12345));        
+        mockBrevisProof.setMockOutput(requestId, outputCommit, vkHash);
+        ogMultiplier.brevisCallback(requestId, circuitOutput);
+
 
         // 10 blocks pass
         vm.roll(10);

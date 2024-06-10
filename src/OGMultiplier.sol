@@ -46,11 +46,15 @@ contract OGMultiplier is BrevisApp, Ownable {
         incentiveHook = IncentiveHook(_incentiveHook);
     }
 
+    function setVkHash(bytes32 _vkHash) external onlyOwner {
+        vkHash = _vkHash;
+    }
+
     function handleProofResult(
         bytes32 _requestId,
         bytes32 _vkHash,
         bytes calldata _appCircuitOutput
-    ) public override {
+    ) internal override {
         require(vkHash == _vkHash, "invalid vk");
         (address[] memory ogAddresses, address[] memory currencies, uint256[] memory amounts) = decodeOutput(_appCircuitOutput);
 
