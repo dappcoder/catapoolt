@@ -533,8 +533,10 @@ contract Demo is Test, Deployers {
         uint256 secondsInADay = 24 * 60 * 60;
         uint256 adjustment = 1000;
         uint256 blockDuration = 12;
-        uint256 blockNumber = (secondsInADay - adjustment) / blockDuration;
+        uint256 timestamp = secondsInADay + adjustment;
+        uint256 blockNumber = (timestamp) / blockDuration;
         vm.roll(blockNumber);
+        vm.warp(timestamp);
 
         // Swap to generate fees
         swapRouter.swap(poolKey, IPoolManager.SwapParams({
@@ -548,10 +550,11 @@ contract Demo is Test, Deployers {
 
         // Almost 1 week later 
         uint256 secondsInAWeek = 7 * 24 * 60 * 60;
-        adjustment = 100;
         uint256 divisor = 12;
-        blockNumber = (secondsInAWeek - adjustment) / divisor;
+        timestamp = secondsInAWeek - adjustment;
+        blockNumber = timestamp / divisor;
         vm.roll(blockNumber);
+        vm.warp(timestamp);
 
         // Alice, Bob, Carol, David and Erica end participation
         lpCompetition.endParticipation(alice, competitionId);
@@ -560,12 +563,15 @@ contract Demo is Test, Deployers {
         lpCompetition.endParticipation(david, competitionId);
         lpCompetition.endParticipation(erica, competitionId);
 
+        // 1 week+ later (competition ended)
+        timestamp = secondsInADay + secondsInAWeek + adjustment;
+        blockNumber = timestamp / divisor;
+        vm.roll(blockNumber);
+        vm.warp(timestamp);
+        console.log("Test timestamp: %s", timestamp);
+
         // TODO embed in first endParticipation call ???
         lpCompetition.calculateRankings(competitionId);
-
-        // 1 week+ later (competition ended)
-        blockNumber = (secondsInAWeek - adjustment) / divisor;
-        vm.roll(blockNumber);
 
         // Alice, Bob, Carol, David and Erica mint SBT rank badges
         lpCompetition.mintSoulboundToken(alice, competitionId);

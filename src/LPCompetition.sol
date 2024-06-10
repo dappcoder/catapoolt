@@ -15,6 +15,8 @@ import {Constants} from "@uniswap/v4-core/test/utils/Constants.sol";
 
 import {IncentiveHook} from "./IncentiveHook.sol";
 
+import "forge-std/console.sol";
+
 contract LPCompetition is ERC721Enumerable {
 
     using PoolIdLibrary for PoolKey;
@@ -157,6 +159,10 @@ contract LPCompetition is ERC721Enumerable {
 
     function calculateRankings(uint256 competitionId) external {
         Competition storage comp = competitions[competitionId];
+        console.log("Block timestamp: %s", block.timestamp);
+        console.log("Block number: %s", block.number);
+        console.log("Competition start time: %s", comp.startTime);
+        console.log("Competition end time: %s", comp.startTime + WEEK_DURATION);
         require(block.timestamp >= comp.startTime + WEEK_DURATION, "Competition not ended");
 
         LPInfo[] storage lps = competitionLPs[competitionId];
@@ -178,7 +184,7 @@ contract LPCompetition is ERC721Enumerable {
             lpDetails[competitionId][lps[i].lpAddress].rank = lps[i].rank;
 
             // Mint SBT as a badge
-            _mint(lps[i].lpAddress, competitionId);
+            mintSoulboundToken(lps[i].lpAddress, competitionId);
 
             // Distribute rewards
             IERC20 prizeToken = IERC20(comp.prizeToken);
@@ -191,7 +197,8 @@ contract LPCompetition is ERC721Enumerable {
     function mintSoulboundToken(address participant, uint256 competitionId) public {
         // Mint SBT as a badge with rank field set to whatever rank the participant achieved
         uint256 rank = lpDetails[competitionId][participant].rank;
-
+        console.log("Minting SBT for participant %s with rank %s", participant, rank);
+        
         //_mint(participant, competitionId, rank);
     }
 
