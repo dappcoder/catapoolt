@@ -6,53 +6,23 @@ Ideal for kickstarting projects by attracting liquidity to desired token pairs.
 
 ## Features
 
-### Liquidity mining rewards
-Sponsor configures and deposits/withdraws rewards for the desired number of blocks.
+Catapoolt has four main liquidity incentivisation features:
+1. Liquidity mining for V4: Catapoolt uses PoolManager state to calculate the fees earned by LPs and to distribute rewards proportionally to the earned amounts.  
+```
+forge test --match-test test_demo_liquidityMining
+```
 
-Rewards are calculated proportionally to the fees earned by LPs. 
-If no fees were generated during a certain period of time, the rewards are devided equally to the LPs that had liquidity around the last tick.
+2. Brevis OG Multiplier: Multiplied rewards to OG LPs that earned lots of fees on external pools or AMMs. The sponsor sets up reward multipliers for pools with farming rewards. The list of the top LPs is aggregated by an off-chain Brevis based service. The ZK circuit proves that the OG list is authentic.
+```
+forge test --match-test test_demo_BrevisOgMultiplier
+```
 
-LPs withdraw rewards.
+3. Rewards to top weekly LPs: Introduces gamification based on a LP competition. Weekly prize tokens are awarded to the top LPs. LPs can register for the competition and after a week, based on the amounts of fees earned, they can win prizes based on their rankings.
+```
+forge test --match-test test_demo_LpCompoetitionTopPrizes
+```
 
-
-### Weekly soulbound tokens for top LPs
-Top LPs for a pool are determined every week for the past week using Brevis.
-
-Brevis handler function mints soulbound tokens to top N(configurable) LPs.
-
-Soulbound token attributes:
-* Week 
-* Rank
-* Pool ID
-
-
-### Prizes for top LPs
-#### Configure ERC20 prizes
-#### Configure NFT prizes
-#### Claim ERC20 prizes
-#### Claim NFT prizes
-#### Reclaim unallocated prizes 
-
-
-### Dynamic fee allocation for top LPs
-#### Configure distribution
-#### Apply dynamic fee allocation
-
-
-### Vesting
-#### Configure vesting rewards
-#### Configure vesting prizes
-#### Withdraw rewards
-#### Withdraw prizes
-
-
-### Brevis switch
-
-
-### Protocol fee with switch
-
-
-### Autocompounding
-Configured by LP (enabled means rewards are added to a desired position)
-Triggered by LP update operations
-Triggered externally
+4. Dynamic Fee Distribution: Unlike dynamic fees, all swappers pay the same amount of fees. The "dynamic" term is related to the distribution of fees. Top LPs from the previous week's competition will earn more fee. How it works: All swappers that registered to the weekly competition will earn say 90% of the swapping fee allocation. The remaining 10% are retained in the hook contract. After the competition ends, the top LPs will split the retained fees from the last week. Fees are cumulated in the Hook contract.
+```
+forge test --match-test test_demo_LpCompetitionDynamicFeeDistribution
+```
