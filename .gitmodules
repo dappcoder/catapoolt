@@ -7,3 +7,6 @@
 [submodule "lib/Solidity-RLP"]
 	path = lib/Solidity-RLP
 	url = https://github.com/hamdiallam/Solidity-RLP
+[submodule "lib/v4-core"]
+	path = lib/v4-core
+	url = https://github.com/dappcoder/v4-core
