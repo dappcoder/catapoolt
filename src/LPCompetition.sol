@@ -104,10 +104,7 @@ contract LPCompetition is ERC721Enumerable {
         require(!comp.rewardsDeposited, "Rewards already deposited");
 
         IERC20 prizeToken = IERC20(comp.prizeToken);
-        console.log("IN CONTRACT LPCompetition prizeToken address: %s", address(prizeToken));
-        console.log("IN CONTRACT LPCompetition depozitRewards comp.totalPrizes", comp.totalPrizes);
         prizeToken.transferFrom(msg.sender, address(this), comp.totalPrizes);
-        console.log("IN CONTRACT LPCompetition depozitRewards balance: %s", prizeToken.balanceOf(address(this)));
 
         comp.rewardsDeposited = true;
 
@@ -163,10 +160,6 @@ contract LPCompetition is ERC721Enumerable {
 
     function calculateRankings(uint256 competitionId) external {
         Competition storage comp = competitions[competitionId];
-        console.log("Block timestamp: %s", block.timestamp);
-        console.log("Block number: %s", block.number);
-        console.log("Competition start time: %s", comp.startTime);
-        console.log("Competition end time: %s", comp.startTime + WEEK_DURATION);
         require(block.timestamp >= comp.startTime + WEEK_DURATION, "Competition not ended");
 
         LPInfo[] storage lps = competitionLPs[competitionId];
@@ -201,7 +194,6 @@ contract LPCompetition is ERC721Enumerable {
     function mintSoulboundToken(address participant, uint256 competitionId) public view {
         // Mint SBT as a badge with rank field set to whatever rank the participant achieved
         uint256 rank = lpDetails[competitionId][participant].rank;
-        console.log("Minting SBT for participant %s with rank %s", participant, rank);
         
         //_mint(participant, competitionId, rank);
     }
@@ -219,9 +211,7 @@ contract LPCompetition is ERC721Enumerable {
 
             // Transfer the reward
             IERC20 prizeToken = IERC20(comp.prizeToken);
-            console.log("IN CONTRACT LPCompetition claimPrize prizeToken address: %s", address(prizeToken));
             uint256 balance = prizeToken.balanceOf(address(this));
-            console.log("IN CONTRACT LPCompetition claimPrize Balance of prize token: %s", balance);
             prizeToken.transfer(participant, comp.prizeAmounts[lp.rank - 1]);
 
             prizeAmount = comp.prizeAmounts[lp.rank - 1];

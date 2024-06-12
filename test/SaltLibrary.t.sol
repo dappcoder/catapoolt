@@ -11,7 +11,6 @@ contract SaltLibraryTest is Test {
         address addr = 0x1234567890123456789012345678901234567890;
         uint16 index = 1234; // Example uint12 value
         bytes32 salt = SaltLibrary.toSalt(addr, index);
-        console.logBytes32(salt);
         (address extractedAddr, uint16 extractedIndex) = SaltLibrary.fromSalt(salt);
         assertEq(addr, extractedAddr, "Addresses should match");
         assertEq(index, extractedIndex, "Indices should match");

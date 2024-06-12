@@ -336,7 +336,6 @@ contract Demo is Test, Deployers {
         // Sponsor deposits prize tokens
         rewardToken.approve(address(lpCompetition), type(uint256).max);
         lpCompetition.depositRewards(1);
-        console.log("IN TEST Prize pool: %s", rewardToken.balanceOf(address(lpCompetition)));
 
         // Alice, Bob, Carol, David and Erica add descending amounts of liquidity
         modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams({
@@ -442,12 +441,9 @@ contract Demo is Test, Deployers {
         blockNumber = timestamp / divisor;
         vm.roll(blockNumber);
         vm.warp(timestamp);
-        console.log("Test timestamp: %s", timestamp);
 
         // TODO embed in first endParticipation call ???
         lpCompetition.calculateRankings(competitionId);
-
-        console.log("IN TEST Prize pool: %s", rewardToken.balanceOf(address(lpCompetition)));
 
         // Alice, Bob, Carol, David and Erica mint SBT rank badges
         lpCompetition.mintSoulboundToken(alice, competitionId);
@@ -455,8 +451,6 @@ contract Demo is Test, Deployers {
         lpCompetition.mintSoulboundToken(carol, competitionId);
         lpCompetition.mintSoulboundToken(david, competitionId);
         lpCompetition.mintSoulboundToken(erica, competitionId);
-
-        console.log("IN TEST Prize pool: %s", rewardToken.balanceOf(address(lpCompetition)));
 
         // Alice, Bob, Carol claim prizes
         assertEq(lpCompetition.claimPrize(alice, competitionId), 10 ether);
@@ -586,7 +580,6 @@ contract Demo is Test, Deployers {
         blockNumber = timestamp / divisor;
         vm.roll(blockNumber);
         vm.warp(timestamp);
-        console.log("Test timestamp: %s", timestamp);
 
         // TODO embed in first endParticipation call ???
         lpCompetition.calculateRankings(competitionId);
