@@ -337,6 +337,7 @@ contract Demo is Test, Deployers {
         // Sponsor deposits prize tokens
         rewardToken.approve(address(lpCompetition), type(uint256).max);
         lpCompetition.depositRewards(1);
+        console.log("IN TEST Prize pool: %s", rewardToken.balanceOf(address(lpCompetition)));
 
         // Alice, Bob, Carol, David and Erica add descending amounts of liquidity
         modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams({
@@ -402,6 +403,15 @@ contract Demo is Test, Deployers {
             salt: bytes32(uint256(4))     // Erica's salt
         }));
 
+        // Registration window closes
+        uint256 secondsInADay = 24 * 60 * 60;
+        uint256 adjustment = 1000;
+        uint256 blockDuration = 12;
+        uint256 timestamp = secondsInADay + adjustment;
+        uint256 blockNumber = (timestamp) / blockDuration;
+        vm.roll(blockNumber);
+        vm.warp(timestamp);
+
         // Swap to generate fees
         swapRouter.swap(poolKey, IPoolManager.SwapParams({
             zeroForOne: true,
@@ -414,10 +424,12 @@ contract Demo is Test, Deployers {
 
         // Almost 1 week later
         uint256 secondsInAWeek = 7 * 24 * 60 * 60;
-        uint256 adjustment = 100;
         uint256 divisor = 12;
-        uint256 blockNumber = (secondsInAWeek - adjustment) / divisor;
+        timestamp = secondsInAWeek - adjustment;
+        blockNumber = timestamp / divisor;
         vm.roll(blockNumber);
+        vm.warp(timestamp);
+
 
         // Alice, Bob, Carol, David and Erica end participation
         lpCompetition.endParticipation(alice, competitionId);
@@ -426,12 +438,17 @@ contract Demo is Test, Deployers {
         lpCompetition.endParticipation(david, competitionId);
         lpCompetition.endParticipation(erica, competitionId);
 
+        // 1 week+ later (competition ended)
+        timestamp = secondsInADay + secondsInAWeek + adjustment;
+        blockNumber = timestamp / divisor;
+        vm.roll(blockNumber);
+        vm.warp(timestamp);
+        console.log("Test timestamp: %s", timestamp);
+
         // TODO embed in first endParticipation call ???
         lpCompetition.calculateRankings(competitionId);
 
-        // 1 week+ later (competition ended)
-        blockNumber = (secondsInAWeek - adjustment) / divisor;
-        vm.roll(blockNumber);
+        console.log("IN TEST Prize pool: %s", rewardToken.balanceOf(address(lpCompetition)));
 
         // Alice, Bob, Carol, David and Erica mint SBT rank badges
         lpCompetition.mintSoulboundToken(alice, competitionId);
@@ -439,6 +456,8 @@ contract Demo is Test, Deployers {
         lpCompetition.mintSoulboundToken(carol, competitionId);
         lpCompetition.mintSoulboundToken(david, competitionId);
         lpCompetition.mintSoulboundToken(erica, competitionId);
+
+        console.log("IN TEST Prize pool: %s", rewardToken.balanceOf(address(lpCompetition)));
 
         // Alice, Bob, Carol claim prizes
         assertEq(lpCompetition.claimPrize(alice, competitionId), 10 ether);

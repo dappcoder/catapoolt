@@ -104,7 +104,7 @@ contract IncentiveHook is BaseHook {
         userPools[msg.sender].push(poolKey.toId());
         // console.log("INCENTIVE: afterAddLiquidity");
         // BalanceDelta hookDelta = toBalanceDelta(10_000, 0);
-        BalanceDelta hookDelta = toBalanceDelta(100, 100);
+        BalanceDelta hookDelta = toBalanceDelta(0, 0);
 
         return (this.afterAddLiquidity.selector, hookDelta);
     }

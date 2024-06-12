@@ -104,7 +104,11 @@ contract LPCompetition is ERC721Enumerable {
         require(!comp.rewardsDeposited, "Rewards already deposited");
 
         IERC20 prizeToken = IERC20(comp.prizeToken);
+        console.log("IN CONTRACT LPCompetition prizeToken address: %s", address(prizeToken));
+        console.log("IN CONTRACT LPCompetition depozitRewards comp.totalPrizes", comp.totalPrizes);
         prizeToken.transferFrom(msg.sender, address(this), comp.totalPrizes);
+        console.log("IN CONTRACT LPCompetition depozitRewards balance: %s", prizeToken.balanceOf(address(this)));
+
         comp.rewardsDeposited = true;
 
         emit RewardsDeposited(competitionId, comp.totalPrizes);
@@ -178,7 +182,7 @@ contract LPCompetition is ERC721Enumerable {
             }
         }
 
-        // Assign ranks and distribute rewards
+        // Assign ranks
         for (uint256 i = 0; i < lps.length && i < comp.prizeAmounts.length; i++) {
             lps[i].rank = i + 1;
             lpDetails[competitionId][lps[i].lpAddress].rank = lps[i].rank;
@@ -186,9 +190,9 @@ contract LPCompetition is ERC721Enumerable {
             // Mint SBT as a badge
             mintSoulboundToken(lps[i].lpAddress, competitionId);
 
-            // Distribute rewards
-            IERC20 prizeToken = IERC20(comp.prizeToken);
-            prizeToken.transfer(lps[i].lpAddress, comp.prizeAmounts[i]);
+            // // Distribute rewards
+            // IERC20 prizeToken = IERC20(comp.prizeToken);
+            // prizeToken.transfer(lps[i].lpAddress, comp.prizeAmounts[i]);
 
             emit RewardsClaimed(competitionId, lps[i].lpAddress, comp.prizeAmounts[i], lps[i].rank);
         }
@@ -215,6 +219,9 @@ contract LPCompetition is ERC721Enumerable {
 
             // Transfer the reward
             IERC20 prizeToken = IERC20(comp.prizeToken);
+            console.log("IN CONTRACT LPCompetition claimPrize prizeToken address: %s", address(prizeToken));
+            uint256 balance = prizeToken.balanceOf(address(this));
+            console.log("IN CONTRACT LPCompetition claimPrize Balance of prize token: %s", balance);
             prizeToken.transfer(participant, comp.prizeAmounts[lp.rank - 1]);
 
             prizeAmount = comp.prizeAmounts[lp.rank - 1];
