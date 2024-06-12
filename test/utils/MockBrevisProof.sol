@@ -18,10 +18,10 @@ contract MockBrevisProof is IBrevisProof {
     }
 
     function submitProof(
-        uint64 _chainId,
-        bytes calldata _proofWithPubInputs,
-        bool _withAppProof
-    ) external returns (bytes32 _requestId) {
+        uint64,
+        bytes calldata,
+        bool
+    ) external pure returns (bytes32 _requestId) {
         return bytes32(0);
     }
 

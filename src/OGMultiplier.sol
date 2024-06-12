@@ -51,7 +51,7 @@ contract OGMultiplier is BrevisApp, Ownable {
     }
 
     function handleProofResult(
-        bytes32 _requestId,
+        bytes32,
         bytes32 _vkHash,
         bytes calldata _appCircuitOutput
     ) internal override {

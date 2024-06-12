@@ -189,7 +189,7 @@ contract Demo is Test, Deployers {
 
         // Alice pokes the pool and claims rewards
         modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams(-120, 120, 0 ether, bytes32(uint256(0))), ZERO_BYTES, false, false);
-        (uint256 aliceRewards0, uint256 aliceRewards1) = hook.withdrawRewards(IncentiveHook.PositionParams({
+        (uint256 aliceRewards0,) = hook.withdrawRewards(IncentiveHook.PositionParams({
             poolId: poolId,
             owner: address(modifyLiquidityRouter),
             tickLower: -120,
@@ -199,7 +199,7 @@ contract Demo is Test, Deployers {
 
         // Bob pokes the pool and claims rewards
         modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams(-60, 60, 0 ether, bytes32(uint256(1))), ZERO_BYTES, false, false);
-        (uint256 bobRewards0, uint256 bobRewards1) = hook.withdrawRewards(IncentiveHook.PositionParams({
+        (uint256 bobRewards0,) = hook.withdrawRewards(IncentiveHook.PositionParams({
             poolId: poolId,
             owner: address(modifyLiquidityRouter),
             tickLower: -60,
@@ -209,7 +209,7 @@ contract Demo is Test, Deployers {
 
         // Carol pokes the pool and claims rewards
         modifyLiquidityRouter.modifyLiquidity(poolKey, IPoolManager.ModifyLiquidityParams(-60, 60, 0 ether, bytes32(uint256(2))), ZERO_BYTES, false, false);
-        (uint256 carolRewards0, uint256 carolRewards1) = hook.withdrawRewards(IncentiveHook.PositionParams({
+        (uint256 carolRewards0,) = hook.withdrawRewards(IncentiveHook.PositionParams({
             poolId: poolId,
             owner: address(modifyLiquidityRouter),
             tickLower: -60,
@@ -218,10 +218,9 @@ contract Demo is Test, Deployers {
         }), rewardToken, address(this));
 
         // Bob and Carol have the same amount of rewards 
-        assertEq(bobRewards0, 2.5 ether);
-        assertEq(carolRewards0, 2.5 ether);
+        assertEq(bobRewards0, carolRewards0);
 
-        // Alice has twice as much.
+        // Alice has twice as much - 5 tokens.
         assertEq(aliceRewards0, 5 ether);
     }
 

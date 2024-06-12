@@ -98,7 +98,7 @@ contract IncentiveHook is BaseHook {
         address,
         PoolKey calldata poolKey,
         IPoolManager.ModifyLiquidityParams calldata,
-        BalanceDelta delta,
+        BalanceDelta,
         bytes calldata
     ) external override returns (bytes4, BalanceDelta) {
         userPools[msg.sender].push(poolKey.toId());
@@ -113,9 +113,9 @@ contract IncentiveHook is BaseHook {
         address,
         PoolKey calldata,
         IPoolManager.ModifyLiquidityParams calldata,
-        BalanceDelta delta,
+        BalanceDelta,
         bytes calldata
-    ) external override returns (bytes4, BalanceDelta) {
+    ) external override pure returns (bytes4, BalanceDelta) {
         // console.log("INCENTIVE: afterRemoveLiquidity");
         // BalanceDelta hookDelta = toBalanceDelta(10_000, 0); 
         BalanceDelta hookDelta = toBalanceDelta(0, 0); 

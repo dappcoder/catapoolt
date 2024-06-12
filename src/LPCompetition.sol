@@ -198,7 +198,7 @@ contract LPCompetition is ERC721Enumerable {
         }
     }
 
-    function mintSoulboundToken(address participant, uint256 competitionId) public {
+    function mintSoulboundToken(address participant, uint256 competitionId) public view {
         // Mint SBT as a badge with rank field set to whatever rank the participant achieved
         uint256 rank = lpDetails[competitionId][participant].rank;
         console.log("Minting SBT for participant %s with rank %s", participant, rank);
@@ -236,7 +236,7 @@ contract LPCompetition is ERC721Enumerable {
         return lpDetails[competitionId][participant];
     }
 
-    function claimExtraFees(address participant, uint256 competitionId) external returns (uint256 retainedFees) {
+    function claimExtraFees(address participant, uint256 competitionId) external view returns (uint256 retainedFees) {
         LPInfo storage lp = lpDetails[competitionId][participant];
         require(lp.ended, "Participation not ended");
         require(lp.claimed, "Prizes not claimed");
@@ -244,6 +244,7 @@ contract LPCompetition is ERC721Enumerable {
         // Transfer the retained fees
         // IERC20 prizeToken = IERC20(comp.prizeToken);
         // prizeToken.transfer(participant, lp.endFees - lp.startFees);
+        retainedFees = 0;
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize) internal override(ERC721Enumerable) {
